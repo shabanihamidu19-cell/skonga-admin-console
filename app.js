@@ -1,13 +1,82 @@
 (function () {
-  const M = window.SKONGA_MOCK;
-  const viewEl = document.getElementById("view");
-  const titleEl = document.getElementById("page-title");
-  const subEl = document.getElementById("page-sub");
-  const panel = document.getElementById("menu-panel");
-  const backdrop = document.getElementById("menu-backdrop");
-  const menuBtn = document.getElementById("menu-btn");
+  "use strict";
 
-  const titles = {
+  var M = window.SKONGA_MOCK;
+  if (!M) {
+    console.error("SKONGA_MOCK missing — load mock-data.js first");
+    return;
+  }
+
+  var viewEl = document.getElementById("view");
+  var titleEl = document.getElementById("page-title");
+  var subEl = document.getElementById("page-sub");
+  var panel = document.getElementById("menu-panel");
+  var backdrop = document.getElementById("menu-backdrop");
+  var menuBtn = document.getElementById("menu-btn");
+  var menuClose = document.getElementById("menu-close");
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&")
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/"/g, """);
+  }
+
+  function openMenu() {
+    if (!panel) return;
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    if (backdrop) {
+      backdrop.hidden = false;
+      backdrop.removeAttribute("hidden");
+      backdrop.classList.add("show");
+    }
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "true");
+    document.body.classList.add("menu-open");
+  }
+
+  function closeMenu() {
+    if (!panel) return;
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+    if (backdrop) {
+      backdrop.hidden = true;
+      backdrop.setAttribute("hidden", "");
+      backdrop.classList.remove("show");
+    }
+    if (menuBtn) menuBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("menu-open");
+  }
+
+  function toggleMenu(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (panel && panel.classList.contains("open")) closeMenu();
+    else openMenu();
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener("click", toggleMenu);
+  }
+  if (menuClose) {
+    menuClose.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeMenu();
+    });
+  }
+  if (backdrop) {
+    backdrop.addEventListener("click", function () {
+      closeMenu();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeMenu();
+  });
+
+  var titles = {
     overview: ["Overview", "Four key signals — mock data"],
     users: ["Users", "Account directory"],
     usage: ["Usage", "Quota snapshot"],
@@ -18,42 +87,6 @@
     system: ["System", "Service health"],
     settings: ["Settings", "Local mock policy only"],
   };
-
-  function esc(s) {
-    return String(s)
-      .replace(/&/g, "&")
-      .replace(/</g, "<")
-      .replace(/>/g, ">")
-      .replace(/"/g, """);
-  }
-
-  function openMenu() {
-    panel.classList.add("open");
-    panel.setAttribute("aria-hidden", "false");
-    backdrop.hidden = false;
-    menuBtn.setAttribute("aria-expanded", "true");
-    document.body.classList.add("menu-open");
-  }
-
-  function closeMenu() {
-    panel.classList.remove("open");
-    panel.setAttribute("aria-hidden", "true");
-    backdrop.hidden = true;
-    menuBtn.setAttribute("aria-expanded", "false");
-    document.body.classList.remove("menu-open");
-  }
-
-  function toggleMenu() {
-    if (panel.classList.contains("open")) closeMenu();
-    else openMenu();
-  }
-
-  menuBtn.addEventListener("click", toggleMenu);
-  document.getElementById("menu-close").addEventListener("click", closeMenu);
-  backdrop.addEventListener("click", closeMenu);
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeMenu();
-  });
 
   function pct(n) {
     return Math.round(n * 100) + "%";
@@ -71,7 +104,7 @@
   }
 
   function toast(msg) {
-    const t = document.createElement("div");
+    var t = document.createElement("div");
     t.className = "toast";
     t.textContent = msg;
     document.body.appendChild(t);
@@ -93,7 +126,7 @@
   }
 
   function renderOverview() {
-    const o = M.overview;
+    var o = M.overview;
     viewEl.innerHTML =
       '<div class="kpi-row">' +
       kpi("Users", o.usersTotal, "+" + o.usersNew7d + " last 7 days") +
@@ -143,7 +176,7 @@
   }
 
   function renderUsage() {
-    const u = M.usage;
+    var u = M.usage;
     viewEl.innerHTML =
       '<div class="kpi-row">' +
       kpi("Chats", u.today.chats, "today") +
@@ -173,7 +206,7 @@
   }
 
   function renderLibrary() {
-    const L = M.library;
+    var L = M.library;
     viewEl.innerHTML =
       '<div class="kpi-row">' +
       kpi("Version", L.version, "") +
@@ -188,7 +221,7 @@
   }
 
   function renderLearn() {
-    const L = M.learn;
+    var L = M.learn;
     viewEl.innerHTML =
       '<div class="kpi-row">' +
       kpi("Active paths", L.activePaths, "") +
@@ -229,10 +262,10 @@
       '<div class="detail empty" id="fb-detail">Select a row</div></div>';
 
     function paint(filter) {
-      const rows = M.feedback.filter(function (f) {
+      var rows = M.feedback.filter(function (f) {
         return filter === "all" || f.vote === filter;
       });
-      const body = document.getElementById("fb-body");
+      var body = document.getElementById("fb-body");
       body.innerHTML = rows
         .map(function (f) {
           return (
@@ -257,11 +290,11 @@
             x.classList.remove("sel");
           });
           tr.classList.add("sel");
-          const f = M.feedback.find(function (x) {
+          var f = M.feedback.find(function (x) {
             return x.id === tr.getAttribute("data-id");
           });
           if (!f) return;
-          const d = document.getElementById("fb-detail");
+          var d = document.getElementById("fb-detail");
           d.classList.remove("empty");
           d.innerHTML =
             "<h3>" +
@@ -302,7 +335,7 @@
       '<tbody id="rp-body"></tbody></table></div></div>' +
       '<div class="detail empty" id="rp-detail">Select a report</div></div>';
 
-    const body = document.getElementById("rp-body");
+    var body = document.getElementById("rp-body");
     function paint() {
       body.innerHTML = M.reports
         .map(function (r) {
@@ -328,11 +361,11 @@
             x.classList.remove("sel");
           });
           tr.classList.add("sel");
-          const r = M.reports.find(function (x) {
+          var r = M.reports.find(function (x) {
             return x.id === tr.getAttribute("data-id");
           });
           if (!r) return;
-          const d = document.getElementById("rp-detail");
+          var d = document.getElementById("rp-detail");
           d.classList.remove("empty");
           d.innerHTML =
             "<h3>" +
@@ -369,14 +402,14 @@
   }
 
   function renderSettings() {
-    const s = M.settings;
+    var s = M.settings;
     viewEl.innerHTML =
       '<div class="panel"><div class="panel-h">Features</div><div class="form-grid" id="feat"></div></div>' +
       '<div class="panel"><div class="panel-h">Free quotas</div><div class="form-grid" id="quota"></div></div>' +
       '<div class="panel"><div class="panel-h">General</div><div class="form-grid" id="gen"></div>' +
       '<div class="actions"><button type="button" class="btn" id="save">Save locally</button></div></div>';
 
-    const feat = document.getElementById("feat");
+    var feat = document.getElementById("feat");
     Object.keys(s.features).forEach(function (k) {
       feat.innerHTML +=
         '<div class="form-row inline"><label>' +
@@ -387,7 +420,7 @@
         (s.features[k] ? "checked" : "") +
         "/></div>";
     });
-    const q = document.getElementById("quota");
+    var q = document.getElementById("quota");
     [
       ["freeChat", "Chat / day"],
       ["freeScan", "Scan / day"],
@@ -422,12 +455,12 @@
       s.feedbackRetainDays = Number(document.getElementById("retain").value);
       try {
         localStorage.setItem("skonga_admin_settings_mock", JSON.stringify(s));
-      } catch (e) {}
+      } catch (err) {}
       toast("Saved locally only");
     });
   }
 
-  const renderers = {
+  var renderers = {
     overview: renderOverview,
     users: renderUsers,
     usage: renderUsage,
@@ -440,7 +473,7 @@
   };
 
   function show(name) {
-    const t = titles[name] || [name, ""];
+    var t = titles[name] || [name, ""];
     titleEl.textContent = t[0];
     subEl.textContent = t[1];
     document.querySelectorAll("[data-view]").forEach(function (b) {
@@ -450,29 +483,38 @@
     (renderers[name] || renderOverview)();
   }
 
-  document.getElementById("nav").addEventListener("click", function (e) {
-    const btn = e.target.closest("button[data-view]");
-    if (btn) show(btn.getAttribute("data-view"));
-  });
+  var nav = document.getElementById("nav");
+  if (nav) {
+    nav.addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-view]");
+      if (btn) show(btn.getAttribute("data-view"));
+    });
+  }
 
-  document.querySelector(".settings-link").addEventListener("click", function () {
-    show("settings");
-  });
+  var settingsLink = document.querySelector(".settings-link");
+  if (settingsLink) {
+    settingsLink.addEventListener("click", function () {
+      show("settings");
+    });
+  }
 
-  document.getElementById("global-search").addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    const q = e.target.value.trim().toLowerCase();
-    if (!q) return;
-    if (q.indexOf("report") >= 0) show("reports");
-    else if (q.indexOf("like") >= 0 || q.indexOf("feedback") >= 0) show("feedback");
-    else if (q.indexOf("user") >= 0) show("users");
-    else toast("Search is mock — try: users, feedback, reports");
-  });
+  var search = document.getElementById("global-search");
+  if (search) {
+    search.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter") return;
+      var q = e.target.value.trim().toLowerCase();
+      if (!q) return;
+      if (q.indexOf("report") >= 0) show("reports");
+      else if (q.indexOf("like") >= 0 || q.indexOf("feedback") >= 0) show("feedback");
+      else if (q.indexOf("user") >= 0) show("users");
+      else toast("Search is mock — try: users, feedback, reports");
+    });
+  }
 
   try {
-    const saved = localStorage.getItem("skonga_admin_settings_mock");
+    var saved = localStorage.getItem("skonga_admin_settings_mock");
     if (saved) Object.assign(M.settings, JSON.parse(saved));
-  } catch (e) {}
+  } catch (err) {}
 
   show("overview");
 })();
