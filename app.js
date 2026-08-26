@@ -3,6 +3,9 @@
   const viewEl = document.getElementById("view");
   const titleEl = document.getElementById("page-title");
   const subEl = document.getElementById("page-sub");
+  const panel = document.getElementById("menu-panel");
+  const backdrop = document.getElementById("menu-backdrop");
+  const menuBtn = document.getElementById("menu-btn");
 
   const titles = {
     overview: ["Overview", "Four key signals — mock data"],
@@ -23,6 +26,34 @@
       .replace(/>/g, ">")
       .replace(/"/g, """);
   }
+
+  function openMenu() {
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    backdrop.hidden = false;
+    menuBtn.setAttribute("aria-expanded", "true");
+    document.body.classList.add("menu-open");
+  }
+
+  function closeMenu() {
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+    backdrop.hidden = true;
+    menuBtn.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("menu-open");
+  }
+
+  function toggleMenu() {
+    if (panel.classList.contains("open")) closeMenu();
+    else openMenu();
+  }
+
+  menuBtn.addEventListener("click", toggleMenu);
+  document.getElementById("menu-close").addEventListener("click", closeMenu);
+  backdrop.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeMenu();
+  });
 
   function pct(n) {
     return Math.round(n * 100) + "%";
@@ -329,7 +360,6 @@
               r.status = btn.getAttribute("data-st");
               toast("Mock status → " + r.status);
               paint();
-              tr.click();
             });
           });
         });
@@ -413,15 +443,20 @@
     const t = titles[name] || [name, ""];
     titleEl.textContent = t[0];
     subEl.textContent = t[1];
-    document.querySelectorAll("#nav button").forEach(function (b) {
+    document.querySelectorAll("[data-view]").forEach(function (b) {
       b.classList.toggle("active", b.getAttribute("data-view") === name);
     });
+    closeMenu();
     (renderers[name] || renderOverview)();
   }
 
   document.getElementById("nav").addEventListener("click", function (e) {
     const btn = e.target.closest("button[data-view]");
     if (btn) show(btn.getAttribute("data-view"));
+  });
+
+  document.querySelector(".settings-link").addEventListener("click", function () {
+    show("settings");
   });
 
   document.getElementById("global-search").addEventListener("keydown", function (e) {
