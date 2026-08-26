@@ -10,6 +10,10 @@
   <div class="shell">
     <header class="topbar">
       <div class="topbar-left">
+        <button type="button" id="menu-btn" class="menu-btn" aria-label="Open menu" aria-expanded="false" title="Menu">
+          <span class="menu-line"></span>
+          <span class="menu-line"></span>
+        </button>
         <span class="mark">S</span>
         <span class="product">SKONGA <em>Admin</em></span>
       </div>
@@ -22,35 +26,41 @@
       </div>
     </header>
 
-    <div class="body">
-      <aside class="sidebar">
-        <nav id="nav">
-          <p class="nav-label">Operate</p>
-          <button type="button" data-view="overview" class="active">Overview</button>
-          <button type="button" data-view="users">Users</button>
-          <button type="button" data-view="usage">Usage</button>
-          <p class="nav-label">Quality</p>
-          <button type="button" data-view="feedback">Feedback</button>
-          <button type="button" data-view="reports">Reports</button>
-          <p class="nav-label">Platform</p>
-          <button type="button" data-view="library">Library</button>
-          <button type="button" data-view="learn">Learn</button>
-          <button type="button" data-view="system">System</button>
-          <button type="button" data-view="settings">Settings</button>
-        </nav>
-        <p class="sidebar-note">Not connected to production</p>
-      </aside>
+    <!-- Grok-style slide panel -->
+    <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+    <aside id="menu-panel" class="menu-panel" aria-hidden="true">
+      <div class="menu-panel-head">
+        <span class="product">Menu</span>
+        <button type="button" id="menu-close" class="menu-close" aria-label="Close">×</button>
+      </div>
+      <nav id="nav" class="menu-nav">
+        <p class="nav-label">Operate</p>
+        <button type="button" data-view="overview" class="active">Overview</button>
+        <button type="button" data-view="users">Users</button>
+        <button type="button" data-view="usage">Usage</button>
+        <p class="nav-label">Quality</p>
+        <button type="button" data-view="feedback">Feedback</button>
+        <button type="button" data-view="reports">Reports</button>
+        <p class="nav-label">Platform</p>
+        <button type="button" data-view="library">Library</button>
+        <button type="button" data-view="learn">Learn</button>
+        <button type="button" data-view="system">System</button>
+      </nav>
+      <div class="menu-panel-foot">
+        <button type="button" data-view="settings" class="settings-link">Settings</button>
+        <p class="sidebar-note">Mock · not production</p>
+      </div>
+    </aside>
 
-      <main class="content">
-        <div class="content-head">
-          <div>
-            <h1 id="page-title">Overview</h1>
-            <p id="page-sub" class="sub">Platform snapshot</p>
-          </div>
+    <main class="content">
+      <div class="content-head">
+        <div>
+          <h1 id="page-title">Overview</h1>
+          <p id="page-sub" class="sub">Platform snapshot</p>
         </div>
-        <div id="view"></div>
-      </main>
-    </div>
+      </div>
+      <div id="view"></div>
+    </main>
   </div>
   <script src="mock-data.js"></script>
   <script src="app.js"></script>
