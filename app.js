@@ -3,49 +3,41 @@
   const viewEl = document.getElementById("view");
   const titleEl = document.getElementById("page-title");
   const subEl = document.getElementById("page-sub");
-  const drawer = document.getElementById("drawer");
-  const drawerTitle = document.getElementById("drawer-title");
-  const drawerBody = document.getElementById("drawer-body");
 
   const titles = {
-    overview: ["Overview", "Platform snapshot (mock)"],
-    users: ["Users", "Directory — mock accounts"],
-    usage: ["Usage", "Quota policy snapshot"],
-    library: ["Library", "Curriculum RAG readiness"],
-    learn: ["Learn", "Path signals (mock)"],
-    feedback: ["Feedback", "Likes & dislikes on AI replies"],
-    reports: ["Reports", "Structured issues & triage"],
+    overview: ["Overview", "Four key signals — mock data"],
+    users: ["Users", "Account directory"],
+    usage: ["Usage", "Quota snapshot"],
+    feedback: ["Feedback", "Likes & dislikes — list + detail"],
+    reports: ["Reports", "Issue queue — list + detail"],
+    library: ["Library", "RAG readiness"],
+    learn: ["Learn", "Path signals"],
     system: ["System", "Service health"],
-    settings: ["Settings", "Management (local only)"],
+    settings: ["Settings", "Local mock policy only"],
   };
+
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, "&")
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
+      .replace(/"/g, """);
+  }
 
   function pct(n) {
     return Math.round(n * 100) + "%";
   }
 
-  function statusPill(s) {
-    if (s === "ok" || s === "active" || s === "resolved") return '<span class="pill ok">' + s + "</span>";
-    if (s === "open" || s === "warn" || s === "triaged") return '<span class="pill warn">' + s + "</span>";
-    if (s === "bad" || s === "off") return '<span class="pill bad">' + s + "</span>";
-    return '<span class="pill neutral">' + s + "</span>";
+  function pill(s, cls) {
+    return '<span class="pill ' + (cls || "muted") + '">' + esc(s) + "</span>";
   }
 
-  function openDrawer(title, html) {
-    drawerTitle.textContent = title;
-    drawerBody.innerHTML = html;
-    drawer.classList.remove("hidden");
-    drawer.setAttribute("aria-hidden", "false");
+  function statusClass(s) {
+    if (s === "ok" || s === "active" || s === "resolved") return "ok";
+    if (s === "open" || s === "triaged" || s === "warn") return "warn";
+    if (s === "off" || s === "bad") return "bad";
+    return "muted";
   }
-
-  function closeDrawer() {
-    drawer.classList.add("hidden");
-    drawer.setAttribute("aria-hidden", "true");
-  }
-
-  document.getElementById("drawer-close").addEventListener("click", closeDrawer);
-  drawer.addEventListener("click", function (e) {
-    if (e.target === drawer) closeDrawer();
-  });
 
   function toast(msg) {
     const t = document.createElement("div");
@@ -54,331 +46,342 @@
     document.body.appendChild(t);
     setTimeout(function () {
       t.remove();
-    }, 2200);
+    }, 2000);
+  }
+
+  function kpi(label, value, hint) {
+    return (
+      '<div class="kpi"><div class="k">' +
+      esc(label) +
+      '</div><div class="v">' +
+      value +
+      "</div>" +
+      (hint ? '<div class="h">' + esc(hint) + "</div>" : "") +
+      "</div>"
+    );
   }
 
   function renderOverview() {
     const o = M.overview;
     viewEl.innerHTML =
-      '<div class="grid">' +
-      card("Users", o.usersTotal, "+" + o.usersNew7d + " (7d)") +
-      card("Chats today", o.chatsToday, "") +
-      card("Like rate (7d)", pct(o.likeRate7d), "Quality KPI") +
-      card("Open reports", o.openReports, "Needs triage") +
-      card("RAG OK rate", pct(o.ragOkRate), "Library hits") +
+      '<div class="kpi-row">' +
+      kpi("Users", o.usersTotal, "+" + o.usersNew7d + " last 7 days") +
+      kpi("Like rate", pct(o.likeRate7d), "7-day quality") +
+      kpi("Open reports", o.openReports, "Needs triage") +
+      kpi("RAG OK rate", pct(o.ragOkRate), "Library hits") +
       "</div>" +
-      '<div class="panel"><h3>Services</h3>' +
+      '<div class="panel"><div class="panel-h">Services</div><div class="panel-b">' +
       M.services
         .map(function (s) {
           return (
-            '<div class="health-row"><span>' +
-            s.name +
-            '<br><span class="muted">' +
-            s.url +
-            "</span></span>" +
-            statusPill(s.status) +
+            '<div class="health-row"><div><strong>' +
+            esc(s.name) +
+            '</strong><div class="u">' +
+            esc(s.url) +
+            "</div></div>" +
+            pill(s.status, statusClass(s.status)) +
             "</div>"
           );
         })
         .join("") +
-      "</div>";
-  }
-
-  function card(label, value, hint) {
-    return (
-      '<div class="card"><div class="label">' +
-      label +
-      '</div><div class="value">' +
-      value +
-      "</div>" +
-      (hint ? '<div class="hint">' + hint + "</div>" : "") +
-      "</div>"
-    );
+      "</div></div>";
   }
 
   function renderUsers() {
     viewEl.innerHTML =
-      '<div class="panel table-wrap"><table><thead><tr>' +
-      "<th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Created</th>" +
-      "</tr></thead><tbody>" +
+      '<div class="panel"><div class="panel-h">Accounts</div><div class="panel-b"><table><thead><tr>' +
+      "<th>Name</th><th>Email</th><th>Plan</th><th>Status</th><th>Created</th></tr></thead><tbody>" +
       M.users
         .map(function (u) {
           return (
             "<tr><td>" +
-            u.name +
+            esc(u.name) +
             "</td><td>" +
-            u.email +
+            esc(u.email) +
             "</td><td>" +
-            u.plan +
+            esc(u.plan) +
             "</td><td>" +
-            statusPill(u.status) +
+            pill(u.status, statusClass(u.status)) +
             "</td><td>" +
-            u.created +
+            esc(u.created) +
             "</td></tr>"
           );
         })
         .join("") +
-      "</tbody></table></div>";
+      "</tbody></table></div></div>";
   }
 
   function renderUsage() {
     const u = M.usage;
     viewEl.innerHTML =
-      '<div class="grid">' +
-      card("Chats today", u.today.chats, "") +
-      card("Scans", u.today.scans, "") +
-      card("Images", u.today.images, "") +
-      card("RAG hits", u.today.ragHits, "") +
+      '<div class="kpi-row">' +
+      kpi("Chats", u.today.chats, "today") +
+      kpi("Scans", u.today.scans, "today") +
+      kpi("Images", u.today.images, "today") +
+      kpi("RAG hits", u.today.ragHits, "today") +
       "</div>" +
-      '<div class="panel"><h3>Default limits (mock)</h3>' +
-      "<p class=\"muted\">Free — chat " +
+      '<div class="panel"><div class="panel-h">Default limits (mock)</div>' +
+      '<div class="panel-b" style="padding:16px;font-size:0.85rem;color:var(--muted)">' +
+      "Free — chat " +
       u.free.chat +
-      "/day · scan " +
+      " · scan " +
       u.free.scan +
       " · image " +
       u.free.image +
       " · RAG " +
       u.free.rag +
-      "</p>" +
-      "<p class=\"muted\">Pro — chat " +
+      "/day<br>Pro — chat " +
       u.pro.chat +
-      "/day · scan " +
+      " · scan " +
       u.pro.scan +
       " · image " +
       u.pro.image +
       " · RAG " +
       u.pro.rag +
-      "</p></div>";
+      "/day</div></div>";
   }
 
   function renderLibrary() {
     const L = M.library;
     viewEl.innerHTML =
-      '<div class="grid">' +
-      card("Version", L.version, "") +
-      card("Subjects", L.subjectsLoaded, "") +
-      card("Auth mode", L.authMode, "") +
+      '<div class="kpi-row">' +
+      kpi("Version", L.version, "") +
+      kpi("Subjects", L.subjectsLoaded, "") +
+      kpi("Auth", L.authMode, "") +
+      kpi("Last error", L.lastError ? "yes" : "none", "") +
       "</div>" +
-      '<div class="panel"><h3>Last RAG</h3>' +
-      "<p>OK at: <code>" +
-      (L.lastOkAt || "—") +
-      "</code></p>" +
-      "<p>Error: " +
-      (L.lastError || "none") +
-      "</p></div>";
+      '<div class="panel"><div class="panel-h">Last RAG OK</div>' +
+      '<div class="panel-b" style="padding:16px;font-size:0.85rem"><code>' +
+      esc(L.lastOkAt || "—") +
+      "</code></div></div>";
   }
 
   function renderLearn() {
     const L = M.learn;
     viewEl.innerHTML =
-      '<div class="grid">' +
-      card("Active paths", L.activePaths, "") +
-      card("Avg mastery", L.avgMastery, "0–3 scale") +
-      "</div>" +
-      '<div class="panel"><h3>Top subjects</h3><p>' +
-      L.topSubjects.join(", ") +
-      "</p></div>";
+      '<div class="kpi-row">' +
+      kpi("Active paths", L.activePaths, "") +
+      kpi("Avg mastery", L.avgMastery, "0–3") +
+      kpi("Subjects", L.topSubjects.length, L.topSubjects.join(", ")) +
+      kpi("—", "—", "") +
+      "</div>";
+  }
+
+  function renderSystem() {
+    viewEl.innerHTML =
+      '<div class="panel"><div class="panel-h">Health</div><div class="panel-b">' +
+      M.services
+        .map(function (s) {
+          return (
+            '<div class="health-row"><div><strong>' +
+            esc(s.name) +
+            '</strong><div class="u">' +
+            esc(s.url) +
+            "</div></div>" +
+            pill(s.status, statusClass(s.status)) +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div></div>";
   }
 
   function renderFeedback() {
     viewEl.innerHTML =
       '<div class="filters">' +
-      '<select id="fb-filter"><option value="all">All votes</option><option value="like">Likes</option><option value="dislike">Dislikes</option></select>' +
+      '<select id="fb-filter"><option value="all">All</option><option value="like">Likes</option><option value="dislike">Dislikes</option></select>' +
       "</div>" +
-      '<div class="panel table-wrap"><table><thead><tr>' +
-      "<th>When</th><th>User</th><th>Vote</th><th>Curriculum</th><th>Snippet</th>" +
-      "</tr></thead><tbody id="fb-body"></tbody></table></div>";
+      '<div class="dual">' +
+      '<div class="panel"><div class="panel-h">Events</div><div class="panel-b"><table><thead><tr>' +
+      "<th>When</th><th>User</th><th>Vote</th><th>Curriculum</th></tr></thead>" +
+      '<tbody id="fb-body"></tbody></table></div></div>' +
+      '<div class="detail empty" id="fb-detail">Select a row</div></div>';
 
     function paint(filter) {
       const rows = M.feedback.filter(function (f) {
         return filter === "all" || f.vote === filter;
       });
-      document.getElementById("fb-body").innerHTML = rows
+      const body = document.getElementById("fb-body");
+      body.innerHTML = rows
         .map(function (f) {
           return (
-            '<tr class="clickable" data-id="' +
+            '<tr class="click" data-id="' +
             f.id +
             '"><td>' +
             f.at.replace("T", " ").slice(0, 16) +
             "</td><td>" +
-            f.user +
-            '</td><td><span class="pill ' +
-            f.vote +
-            '">' +
-            f.vote +
-            "</span></td><td>" +
-            (f.curriculumAligned ? statusPill("ok") : statusPill("off")) +
+            esc(f.user) +
             "</td><td>" +
-            escapeHtml(f.userText.slice(0, 48)) +
-            "…</td></tr>"
+            pill(f.vote, f.vote) +
+            "</td><td>" +
+            (f.curriculumAligned ? pill("yes", "ok") : pill("no", "muted")) +
+            "</td></tr>"
           );
         })
         .join("");
 
-      document.querySelectorAll("#fb-body tr").forEach(function (tr) {
+      body.querySelectorAll("tr").forEach(function (tr) {
         tr.addEventListener("click", function () {
+          body.querySelectorAll("tr").forEach(function (x) {
+            x.classList.remove("sel");
+          });
+          tr.classList.add("sel");
           const f = M.feedback.find(function (x) {
             return x.id === tr.getAttribute("data-id");
           });
           if (!f) return;
-          openDrawer(
-            "Feedback · " + f.vote,
+          const d = document.getElementById("fb-detail");
+          d.classList.remove("empty");
+          d.innerHTML =
+            "<h3>" +
+            pill(f.vote, f.vote) +
+            " · " +
+            esc(f.user) +
+            "</h3>" +
             '<div class="meta">' +
-              f.at +
-              " · " +
-              f.user +
-              " · " +
-              f.provider +
-              " · citations " +
-              f.citationCount +
-              "</div>" +
-              "<p><strong>User</strong></p><pre>" +
-              escapeHtml(f.userText) +
-              "</pre>" +
-              "<p><strong>Reply</strong></p><pre>" +
-              escapeHtml(f.replyText) +
-              "</pre>"
-          );
+            esc(f.at) +
+            " · " +
+            esc(f.provider) +
+            " · citations " +
+            f.citationCount +
+            "</div>" +
+            "<p style=\"font-size:0.75rem;color:var(--muted);margin:0 0 4px\">User</p><pre>" +
+            esc(f.userText) +
+            "</pre>" +
+            "<p style=\"font-size:0.75rem;color:var(--muted);margin:0 0 4px\">Reply</p><pre>" +
+            esc(f.replyText) +
+            "</pre>";
         });
       });
     }
 
     paint("all");
     document.getElementById("fb-filter").addEventListener("change", function (e) {
+      document.getElementById("fb-detail").className = "detail empty";
+      document.getElementById("fb-detail").textContent = "Select a row";
       paint(e.target.value);
     });
   }
 
   function renderReports() {
     viewEl.innerHTML =
-      '<div class="panel table-wrap"><table><thead><tr>' +
-      "<th>When</th><th>User</th><th>Reason</th><th>Status</th><th>Snippet</th>" +
-      "</tr></thead><tbody>" +
-      M.reports
+      '<div class="dual">' +
+      '<div class="panel"><div class="panel-h">Queue</div><div class="panel-b"><table><thead><tr>' +
+      "<th>When</th><th>User</th><th>Reason</th><th>Status</th></tr></thead>" +
+      '<tbody id="rp-body"></tbody></table></div></div>' +
+      '<div class="detail empty" id="rp-detail">Select a report</div></div>';
+
+    const body = document.getElementById("rp-body");
+    function paint() {
+      body.innerHTML = M.reports
         .map(function (r) {
           return (
-            '<tr class="clickable" data-id="' +
+            '<tr class="click" data-id="' +
             r.id +
             '"><td>' +
             r.at.replace("T", " ").slice(0, 16) +
             "</td><td>" +
-            r.user +
+            esc(r.user) +
             "</td><td><code>" +
-            r.reason +
+            esc(r.reason) +
             "</code></td><td>" +
-            statusPill(r.status) +
-            "</td><td>" +
-            escapeHtml(r.snippet.slice(0, 40)) +
+            pill(r.status, statusClass(r.status)) +
             "</td></tr>"
           );
         })
-        .join("") +
-      "</tbody></table></div>";
+        .join("");
 
-    document.querySelectorAll("#view tr.clickable").forEach(function (tr) {
-      tr.addEventListener("click", function () {
-        const r = M.reports.find(function (x) {
-          return x.id === tr.getAttribute("data-id");
-        });
-        if (!r) return;
-        openDrawer(
-          "Report · " + r.reason,
-          '<div class="meta">' +
-            r.at +
+      body.querySelectorAll("tr").forEach(function (tr) {
+        tr.addEventListener("click", function () {
+          body.querySelectorAll("tr").forEach(function (x) {
+            x.classList.remove("sel");
+          });
+          tr.classList.add("sel");
+          const r = M.reports.find(function (x) {
+            return x.id === tr.getAttribute("data-id");
+          });
+          if (!r) return;
+          const d = document.getElementById("rp-detail");
+          d.classList.remove("empty");
+          d.innerHTML =
+            "<h3>" +
+            esc(r.reason) +
+            "</h3>" +
+            '<div class="meta">' +
+            esc(r.at) +
             " · " +
-            r.user +
+            esc(r.user) +
+            " · " +
+            pill(r.status, statusClass(r.status)) +
             "</div>" +
-            "<p>Status: " +
-            statusPill(r.status) +
+            "<p style=\"font-size:0.85rem\">" +
+            esc(r.snippet) +
             "</p>" +
-            "<p>" +
-            escapeHtml(r.snippet) +
+            "<p class=\"meta\">Note: " +
+            esc(r.note || "—") +
             "</p>" +
-            "<p class=\"muted\">Admin note: " +
-            escapeHtml(r.note || "—") +
-            "</p>" +
-            '<p style="margin-top:16px">' +
-            '<button type="button" class="btn sm" data-st="triaged">Mark triaged</button> ' +
-            '<button type="button" class="btn sm" data-st="resolved">Resolve</button> ' +
-            '<button type="button" class="btn sm ghost" data-st="wontfix">Won\'t fix</button></p>'
-        );
-        drawerBody.querySelectorAll("[data-st]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            r.status = btn.getAttribute("data-st");
-            toast("Mock only: status → " + r.status);
-            closeDrawer();
-            renderReports();
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">' +
+            '<button type="button" class="btn sm" data-st="triaged">Triaged</button>' +
+            '<button type="button" class="btn sm" data-st="resolved">Resolved</button>' +
+            '<button type="button" class="btn sm ghost" data-st="wontfix">Won\'t fix</button></div>';
+          d.querySelectorAll("[data-st]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              r.status = btn.getAttribute("data-st");
+              toast("Mock status → " + r.status);
+              paint();
+              tr.click();
+            });
           });
         });
       });
-    });
-  }
-
-  function renderSystem() {
-    viewEl.innerHTML =
-      '<div class="panel"><h3>Health</h3>' +
-      M.services
-        .map(function (s) {
-          return (
-            '<div class="health-row"><div><strong>' +
-            s.name +
-            '</strong><div class="muted">' +
-            s.url +
-            "</div></div>" +
-            statusPill(s.status) +
-            "</div>"
-          );
-        })
-        .join("") +
-      "</div>";
+    }
+    paint();
   }
 
   function renderSettings() {
     const s = M.settings;
     viewEl.innerHTML =
-      '<div class="panel"><h3>Features</h3><div class="form-grid" id="feat-form"></div></div>' +
-      '<div class="panel"><h3>Quotas (free defaults)</h3><div class="form-grid" id="quota-form"></div></div>' +
-      '<div class="panel"><h3>General</h3><div class="form-grid" id="gen-form"></div></div>' +
-      '<button type="button" class="btn" id="save-settings">Save (local mock)</button>';
+      '<div class="panel"><div class="panel-h">Features</div><div class="form-grid" id="feat"></div></div>' +
+      '<div class="panel"><div class="panel-h">Free quotas</div><div class="form-grid" id="quota"></div></div>' +
+      '<div class="panel"><div class="panel-h">General</div><div class="form-grid" id="gen"></div>' +
+      '<div class="actions"><button type="button" class="btn" id="save">Save locally</button></div></div>';
 
-    const feat = document.getElementById("feat-form");
+    const feat = document.getElementById("feat");
     Object.keys(s.features).forEach(function (k) {
       feat.innerHTML +=
         '<div class="form-row inline"><label>' +
-        k +
-        '</label><label class="toggle"><input type="checkbox" data-feat="' +
+        esc(k) +
+        '</label><input type="checkbox" data-feat="' +
         k +
         '" ' +
         (s.features[k] ? "checked" : "") +
-        "/> on</label></div>";
+        "/></div>";
     });
-
-    const qf = document.getElementById("quota-form");
+    const q = document.getElementById("quota");
     [
       ["freeChat", "Chat / day"],
       ["freeScan", "Scan / day"],
       ["freeImage", "Image / day"],
       ["freeRag", "RAG / day"],
-    ].forEach(function (pair) {
-      qf.innerHTML +=
+    ].forEach(function (p) {
+      q.innerHTML +=
         '<div class="form-row"><label>' +
-        pair[1] +
+        p[1] +
         '</label><input type="number" data-q="' +
-        pair[0] +
+        p[0] +
         '" value="' +
-        s.quotas[pair[0]] +
+        s.quotas[p[0]] +
         '" min="0"/></div>';
     });
-
-    document.getElementById("gen-form").innerHTML =
-      '<div class="form-row inline"><label>Maintenance mode</label><label class="toggle"><input type="checkbox" id="maint" ' +
+    document.getElementById("gen").innerHTML =
+      '<div class="form-row inline"><label>Maintenance mode</label><input type="checkbox" id="maint" ' +
       (s.maintenanceMode ? "checked" : "") +
-      "/> on</label></div>" +
+      "/></div>" +
       '<div class="form-row"><label>Feedback retain (days)</label><input type="number" id="retain" value="' +
       s.feedbackRetainDays +
       '" min="1"/></div>';
 
-    document.getElementById("save-settings").addEventListener("click", function () {
+    document.getElementById("save").addEventListener("click", function () {
       document.querySelectorAll("[data-feat]").forEach(function (el) {
         s.features[el.getAttribute("data-feat")] = el.checked;
       });
@@ -390,26 +393,18 @@
       try {
         localStorage.setItem("skonga_admin_settings_mock", JSON.stringify(s));
       } catch (e) {}
-      toast("Saved locally only — not production");
+      toast("Saved locally only");
     });
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, "&")
-      .replace(/</g, "<")
-      .replace(/>/g, ">")
-      .replace(/"/g, """);
   }
 
   const renderers = {
     overview: renderOverview,
     users: renderUsers,
     usage: renderUsage,
-    library: renderLibrary,
-    learn: renderLearn,
     feedback: renderFeedback,
     reports: renderReports,
+    library: renderLibrary,
+    learn: renderLearn,
     system: renderSystem,
     settings: renderSettings,
   };
@@ -421,14 +416,22 @@
     document.querySelectorAll("#nav button").forEach(function (b) {
       b.classList.toggle("active", b.getAttribute("data-view") === name);
     });
-    closeDrawer();
     (renderers[name] || renderOverview)();
   }
 
   document.getElementById("nav").addEventListener("click", function (e) {
     const btn = e.target.closest("button[data-view]");
-    if (!btn) return;
-    show(btn.getAttribute("data-view"));
+    if (btn) show(btn.getAttribute("data-view"));
+  });
+
+  document.getElementById("global-search").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return;
+    if (q.indexOf("report") >= 0) show("reports");
+    else if (q.indexOf("like") >= 0 || q.indexOf("feedback") >= 0) show("feedback");
+    else if (q.indexOf("user") >= 0) show("users");
+    else toast("Search is mock — try: users, feedback, reports");
   });
 
   try {
